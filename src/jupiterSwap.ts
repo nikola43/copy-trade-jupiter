@@ -1,6 +1,10 @@
 import axios from "axios";
 import dotenv from "dotenv";
+const { HttpsProxyAgent } = require('https-proxy-agent');
 dotenv.config();
+
+const proxyUrl = process.env.PROXY_URL;
+const agent = new HttpsProxyAgent(proxyUrl);
 
 interface SwapInfo {
     ammKey: string;
@@ -38,6 +42,8 @@ interface QuoteResponse {
 
 export const getQuote = async (inputMint: string, outputMint: string, amount: number, slippageBps: number, restrictIntermediateTokens: boolean): Promise<QuoteResponse> => {
 
+
+
     const quoteResponse = await axios.get(
         'https://api.jup.ag/swap/v1/quote', {
         params: {
@@ -46,7 +52,9 @@ export const getQuote = async (inputMint: string, outputMint: string, amount: nu
             amount,
             slippageBps,
             restrictIntermediateTokens
-        }
+        },
+        httpAgent: agent,
+        httpsAgent: agent
     });
 
     return quoteResponse.data;
@@ -73,7 +81,9 @@ export const performSwap = async (quoteResponse: QuoteResponse, walletAddress: s
                 headers: {
                     'Content-Type': 'application/json',
                     // 'x-api-key': '' // enter api key here
-                }
+                },
+                httpAgent: agent,
+                httpsAgent: agent
             }
         );
 

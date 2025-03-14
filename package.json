@@ -31,6 +31,7 @@
 		"graphql-request": "^7.1.2",
 		"http": "^0.0.1-security",
 		"https": "^1.0.0",
+		"https-proxy-agent": "^7.0.6",
 		"jito-ts": "^4.2.0",
 		"mime": "^4.0.6",
 		"node-fetch": "^3.3.2",
