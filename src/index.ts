@@ -44,7 +44,7 @@ const main = async () => {
         response.send('Hello World');
     });
 
-    app.get("/buy", async (request: Request, response: Response) => {
+    app.get("/trade", async (request: Request, response: Response) => {
         // get api key from query
         const apiKey = request.query.apiKey;
         if (!apiKey) {
