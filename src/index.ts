@@ -19,6 +19,11 @@ const main = async () => {
         throw new Error('FEE_PAYER_KEY is required');
     }
 
+    const API_KEY = process.env.API_KEY;
+    if (!API_KEY) {
+        throw new Error('API_KEY is required');
+    }
+
     const feePayerKeypair = Keypair.fromSecretKey(bs58.decode(FEE_PAYER_KEYPAIR));
 
     const rpcUrl = RPC_URL;
@@ -47,7 +52,7 @@ const main = async () => {
             return;
         }
 
-        if (apiKey !== "9D_UiM9e4}]k") {
+        if (apiKey !== API_KEY) {
             response.status(401).send('Invalid apiKey');
             return;
         }
