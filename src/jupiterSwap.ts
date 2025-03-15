@@ -6,7 +6,7 @@ dotenv.config();
 const proxyUrl = process.env.PROXY_URL;
 const agent = new HttpsProxyAgent(proxyUrl);
 
-interface SwapInfo {
+export interface SwapInfo {
     ammKey: string;
     label: string;
     inputMint: string;
@@ -17,12 +17,12 @@ interface SwapInfo {
     feeMint: string;
 }
 
-interface RoutePlan {
+export interface RoutePlan {
     swapInfo: SwapInfo;
     percent: number;
 }
 
-interface QuoteResponse {
+export interface QuoteResponse {
     inputMint: string;
     inAmount: string;
     outputMint: string;
@@ -41,8 +41,6 @@ interface QuoteResponse {
 }
 
 export const getQuote = async (inputMint: string, outputMint: string, amount: number, slippageBps: number, restrictIntermediateTokens: boolean): Promise<QuoteResponse> => {
-
-
 
     const quoteResponse = await axios.get(
         'https://api.jup.ag/swap/v1/quote', {

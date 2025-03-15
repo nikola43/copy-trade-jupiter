@@ -92,15 +92,26 @@ const main = async () => {
             slippageBps
         });
 
-        let txSignature = ""
-        let txSuccess = false;
-        let message = "";
+        // let txSignature = ""
+        // let txSuccess = false;
+        // let message = "";
+
+        let result = {
+            txSignature: "",
+            txSuccess: false,
+            message: "",
+            inAmount: 0,
+            outAmount: 0,
+        }
+
         try {
             const quoteResponse = await getQuote(inputMint.toString(), outputMint.toString(), Number(amount), Number(slippageBps), false);
             if (!quoteResponse) {
                 response.status(500).send('Failed to get quote');
                 return;
             }
+
+            console.log("Quote response: ", quoteResponse);
 
             const swapResponse = await performSwap(quoteResponse, feePayerKeypair.publicKey.toBase58());
             if (!swapResponse) {
@@ -129,26 +140,51 @@ const main = async () => {
                     maxRetries: 2,
                     skipPreflight: true
                 });
-                const confirmation = await connection.confirmTransaction(signature, "finalized");
-                txSignature = signature;
-                if (confirmation.value.err) {
-                    txSuccess = false;
-                    message = `Transaction failed: ${JSON.stringify(confirmation.value.err)}\nhttps://solscan.io/tx/${signature}/`;
-                    console.log(`Transaction failed: ${JSON.stringify(confirmation.value.err)}\nhttps://solscan.io/tx/${signature}/`);
-                } else {
-                    txSuccess = true;
-                    message = `Transaction successful: https://solscan.io/tx/${signature}/`;
-                    console.log(`Transaction successful: https://solscan.io/tx/${signature}/`);
+
+                let retries = 0;
+                const maxRetries = 3;
+
+                while (retries < maxRetries) {
+                    retries++;
+
+                    // Fetch the latest blockhash and last valid block height
+                    const latestBlockhash = await connection.getLatestBlockhash();
+
+                    // Confirm the transaction using the new method signature
+                    const confirmation = await connection.confirmTransaction(
+                        {
+                            signature,
+                            blockhash: latestBlockhash.blockhash,
+                            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+                        },
+                        "confirmed" // Optional commitment level
+                    );
+
+                    if (confirmation.value.err) {
+                        result = {
+                            txSignature: signature,
+                            txSuccess: false,
+                            message: `Transaction failed: ${JSON.stringify(confirmation.value.err)}\nhttps://solscan.io/tx/${signature}/`,
+                            inAmount: Number(amount),
+                            outAmount: 0,
+                        }
+                        console.log(`Transaction failed: ${JSON.stringify(confirmation.value.err)}\nhttps://solscan.io/tx/${signature}/`);
+                    } else {
+
+                        result = {
+                            txSignature: signature,
+                            txSuccess: true,
+                            message: `Transaction successful: https://solscan.io/tx/${signature}/`,
+                            inAmount: Number(amount),
+                            outAmount: Number(quoteResponse.outAmount),
+                        }
+                        console.log(`Transaction successful: https://solscan.io/tx/${signature}/`);
+                        break;
+                    }
                 }
             }
         } catch (error) {
             console.error("Error during simulation:", error);
-        }
-
-        const result = {
-            txSignature,
-            txSuccess,
-            message
         }
 
         response.send(result);
